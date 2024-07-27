@@ -2,17 +2,28 @@ const { User } = require('../model/User');
 const crypto = require('crypto');
 const { sanitizeUser, sendMail } = require('../services/common');
 const jwt = require('jsonwebtoken');
+const { error } = require('console');
 
 exports.createUser = async (req, res) => {
   try {
+    
+    const existingUser = await User.findOne({ email: req.body.email });
+    if (existingUser) {
+      return res.status(400).json(error);
+    }
+
     const salt = crypto.randomBytes(16);
     crypto.pbkdf2(
       req.body.password,
       salt,
       310000,
       32,
-      'sha256',
+      "sha256",
       async function (err, hashedPassword) {
+        if (err) {
+          return res.status(500).json({ error: "Wrong Password" });
+        }
+
         const user = new User({ ...req.body, password: hashedPassword, salt });
         const doc = await user.save();
 
@@ -26,7 +37,7 @@ exports.createUser = async (req, res) => {
               process.env.JWT_SECRET_KEY
             );
             res
-              .cookie('jwt', token, {
+              .cookie("jwt", token, {
                 expires: new Date(Date.now() + 3600000),
                 httpOnly: true,
               })
