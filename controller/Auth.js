@@ -6,7 +6,7 @@ const { error } = require('console');
 
 exports.createUser = async (req, res) => {
   try {
-    
+    // Check if email already exists
     const existingUser = await User.findOne({ email: req.body.email });
     if (existingUser) {
       return res.status(400).json(error);
@@ -21,7 +21,7 @@ exports.createUser = async (req, res) => {
       "sha256",
       async function (err, hashedPassword) {
         if (err) {
-          return res.status(500).json({ error: "Wrong Password" });
+          return res.status(500).json(error);
         }
 
         const user = new User({ ...req.body, password: hashedPassword, salt });
